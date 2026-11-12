@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gurudarshan@portfolio: ~ | Terminal Developer Portfolio</title>
+  <!-- Google Fonts: Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       CSS Variables & Base Reset
+       ========================================================================== */
+    :root {
+      --bg-outer: #050805;
+      --bg-terminal: #0A0E0A;
+      --bg-header: #0E150E;
+      --bg-footer: #0D140D;
+      --bg-card: #0E160E;
+      --bg-pill: #111C12;
+      --bg-pill-hover: #192E1C;
+      --border-dim: #1E3A24;
+      --border-pill: #224229;
+      --green-primary: #00E676;
+      --green-bright: #4AF626;
+      --green-muted: #A5D6A7;
+      --green-dim: #7CB386;
+      --green-dark: #5C8A66;
+      --red-error: #FF6E6E;
+      --font-mono: "Fira Code", "JetBrains Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    ::selection {
+      background-color: var(--green-primary);
+      color: var(--bg-terminal);
+    }
+
+    body {
+      min-height: 100vh;
+      width: 100%;
+      background-color: var(--bg-outer);
+      color: var(--green-primary);
+      font-family: var(--font-mono);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      overflow-x: hidden;
+    }
+
+    @media (min-width: 640px) {
+      body {
+        padding: 1rem;
+      }
+    }
+
+    @media (min-width: 768px) {
+      body {
+        padding: 1.5rem;
+      }
+    }
+
+    /* ==========================================================================
+       Phosphor Glow & CRT Scanlines
+       ========================================================================== */
+    .phosphor-glow {
+      text-shadow: 0 0 6px rgba(0, 230, 118, 0.42), 0 0 14px rgba(74, 246, 38, 0.16);
+    }
+
+    .phosphor-bright {
+      text-shadow: 0 0 8px rgba(74, 246, 38, 0.65);
+    }
+
+    .crt-scanlines {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      opacity: 0.8;
+      background: linear-gradient(
+          rgba(18, 16, 16, 0) 50%,
+          rgba(0, 0, 0, 0.32) 50%
+        ),
+        linear-gradient(
+          90deg,
+          rgba(255, 0, 0, 0.025),
+          rgba(0, 255, 0, 0.015),
+          rgba(0, 0, 255, 0.025)
+        );
+      background-size: 100% 3px, 6px 100%;
+      transition: opacity 0.2s ease;
+    }
+
+    .crt-scanlines.hidden {
+      display: none;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-terminal);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1B3B22;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--green-primary);
+    }
+
+    /* ==========================================================================
+       Main Terminal Window Container
+       ========================================================================== */
+    .terminal-window {
+      position: relative;
+      width: 100%;
+      max-width: 64rem;
+      height: 92vh;
+      background-color: var(--bg-terminal);
+      border: 1px solid var(--border-dim);
+      border-radius: 0.75rem;
+      box-shadow: 0 0 45px rgba(0, 230, 118, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    @media (min-width: 640px) {
+      .terminal-window {
+        height: 88vh;
+      }
+    }
+
+    /* ==========================================================================
+       Header / Title Bar
+       ========================================================================== */
+    .terminal-header {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background-color: var(--bg-header);
+      border-bottom: 1px solid var(--border-dim);
+      user-select: none;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .traffic-lights {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .dot {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+    }
+    .dot-red {
+      background-color: rgba(255, 95, 86, 0.8);
+      border: 1px solid #FF5F56;
+    }
+    .dot-yellow {
+      background-color: rgba(255, 189, 46, 0.8);
+      border: 1px solid #FFBD2E;
+    }
+    .dot-green {
+      background-color: rgba(39, 201, 63, 0.8);
+      border: 1px solid #27C93F;
+    }
+
+    .status-badge {
+      display: none;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.75rem;
+      color: rgba(74, 246, 38, 0.85);
+      background-color: var(--bg-terminal);
+      padding: 0.15rem 0.625rem;
+      border-radius: 0.25rem;
+      border: 1px solid var(--border-dim);
+    }
+
+    @media (min-width: 640px) {
+      .status-badge {
+        display: flex;
+      }
+    }
+
+    .ping-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background-color: var(--green-bright);
+      animation: pulseGlow 1.5s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--green-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.625rem;
+      border-radius: 0.25rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      background-color: var(--bg-terminal);
+      border: 1px solid var(--border-dim);
+      color: var(--green-dark);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .toggle-btn:hover {
+      color: var(--green-muted);
+    }
+
+    .toggle-btn.active {
+      background-color: #132617;
+      border-color: rgba(0, 230, 118, 0.5);
+      color: var(--green-bright);
+    }
+
+    .btn-label {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .btn-label {
+        display: inline;
+      }
+    }
+
+    /* ==========================================================================
+       Scrollable Terminal Body
+       ========================================================================== */
+    .terminal-body {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      cursor: text;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 640px) {
+      .terminal-body {
+        padding: 1.75rem;
+        font-size: 1rem;
+      }
+    }
+
+    /* Banner */
+    .banner-block {
+      border-bottom: 1px solid rgba(30, 58, 36, 0.7);
+      padding-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .ascii-banner {
+      font-size: 0.65rem;
+      line-height: 1.15;
+      color: var(--green-bright);
+      overflow-x: auto;
+    }
+
+    @media (min-width: 640px) {
+      .ascii-banner {
+        font-size: 0.85rem;
+      }
+    }
+
+    .kbd-badge {
+      padding: 0.1rem 0.375rem;
+      background-color: #121F14;
+      border: 1px solid #284D30;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      color: var(--green-bright);
+    }
+
+    /* Output entries */
+    .prompt-history {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--green-muted);
+      padding-top: 0.25rem;
+    }
+
+    .prompt-user {
+      color: var(--green-bright);
+      font-weight: 600;
+    }
+
+    .output-text {
+      padding-left: 0.625rem;
+      border-left: 2px solid var(--border-dim);
+      color: var(--green-primary);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .output-error {
+      padding-left: 0.625rem;
+      border-left: 2px solid rgba(255, 110, 110, 0.6);
+      color: var(--red-error);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .cursor-block {
+      display: inline-block;
+      width: 0.5rem;
+      height: 1rem;
+      margin-left: 2px;
+      vertical-align: middle;
+      background-color: var(--green-bright);
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* Projects Grid */
+    .projects-wrapper {
+      padding-left: 0.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .dir-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--green-dim);
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.875rem;
+    }
+
+    @media (min-width: 768px) {
+      .projects-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .project-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .project-card:hover {
+      border-color: var(--green-primary);
+      transform: translateY(-2px);
+    }
+
+    .project-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--green-dim);
+      margin-bottom: 0.25rem;
+    }
+
+    .project-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green-bright);
+      margin-bottom: 0.375rem;
+    }
+
+    .project-desc {
+      font-size: 0.75rem;
+      color: var(--green-muted);
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+
+    .project-stack {
+      font-size: 0.6875rem;
+      color: var(--green-dim);
+      background-color: #080C08;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      border: 1px solid #182E1D;
+      margin-bottom: 0.75rem;
+    }
+
+    .project-links {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    .terminal-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: var(--green-primary);
+      text-decoration: none;
+    }
+
+    .terminal-link:hover {
+      color: var(--green-bright);
+      text-decoration: underline;
+    }
+
+    /* Contact Cards */
+    .contact-wrapper {
+      padding-left: 0.625rem;
+      border-left: 2px solid rgba(0, 230, 118, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+    }
+
+    .contact-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding-top: 0.25rem;
+    }
+
+    .contact-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.25rem;
+      background-color: #0E170E;
+      border: 1px solid var(--border-dim);
+      color: var(--green-bright);
+      font-size: 0.8125rem;
+      text-decoration: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .contact-pill:hover {
+      border-color: var(--green-bright);
+    }
+
+    /* Neofetch Layout */
+    .neofetch-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding-left: 0.25rem;
+    }
+
+    @media (min-width: 640px) {
+      .neofetch-wrapper {
+        flex-direction: row;
+        gap: 1.5rem;
+        align-items: flex-start;
+      }
+    }
+
+    .neofetch-art {
+      font-size: 0.75rem;
+      line-height: 1.2;
+      color: var(--green-bright);
+      user-select: none;
+    }
+
+    .neofetch-info {
+      font-size: 0.8125rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    /* Tab Autocomplete Hint */
+    .tab-hint {
+      font-size: 0.75rem;
+      color: var(--green-dim);
+      background-color: var(--bg-card);
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.25rem;
+      border: 1px solid var(--border-dim);
+      align-self: flex-start;
+    }
+
+    .tab-hint.hidden {
+      display: none;
+    }
+
+    /* Active Input Form */
+    .input-form {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-top: 0.25rem;
+    }
+
+    .input-label {
+      color: var(--green-bright);
+      font-weight: 600;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .prompt-mobile {
+      display: inline;
+    }
+    .prompt-desktop {
+      display: none;
+    }
+
+    @media (min-width: 640px) {
+      .prompt-mobile {
+        display: none;
+      }
+      .prompt-desktop {
+        display: inline;
+      }
+    }
+
+    .terminal-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--green-bright);
+      font-family: inherit;
+      font-size: inherit;
+      caret-color: var(--green-bright);
+    }
+
+    .terminal-input::placeholder {
+      color: #2C5435;
+    }
+
+    /* ==========================================================================
+       Footer Quick-Action Pills
+       ========================================================================== */
+    .terminal-footer {
+      position: relative;
+      z-index: 20;
+      background-color: var(--bg-footer);
+      border-top: 1px solid var(--border-dim);
+      padding: 0.625rem 1rem;
+    }
+
+    .quick-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .quick-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-label {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--green-dark);
+      white-space: nowrap;
+      margin-right: 0.25rem;
+    }
+
+    .quick-pill {
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.375rem;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: var(--bg-pill);
+      color: var(--green-primary);
+      border: 1px solid var(--border-pill);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .quick-pill:hover {
+      background-color: var(--bg-pill-hover);
+      color: var(--green-bright);
+      border-color: var(--green-primary);
+    }
+
+    .quick-pill:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main Terminal Window -->
+  <div class="terminal-window">
+    <!-- CRT Scanline Overlay -->
+    <div id="crt-overlay" class="crt-scanlines"></div>
+
+    <!-- Top Title Bar -->
+    <header class="terminal-header">
+      <div class="header-left">
+        <div class="traffic-lights">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <div class="status-badge">
+          <span class="ping-dot"></span>
+          <span>ONLINE</span>
+        </div>
+      </div>
+
+      <div class="header-title">
+        <!-- Terminal SVG Icon -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4AF626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+        </svg>
+        <span>visitor@portfolio: ~</span>
+      </div>
+
+      <div class="header-controls">
+        <button type="button" id="btn-crt" class="toggle-btn active" title="Toggle CRT Scanlines">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span class="btn-label">CRT</span>
+        </button>
+
+        <button type="button" id="btn-sfx" class="toggle-btn active" title="Toggle Terminal Audio">
+          <svg id="icon-sound-on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="icon-sound-off" style="display:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+          <span id="sfx-label" class="btn-label">SFX</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Terminal Buffer -->
+    <main id="terminal-body" class="terminal-body phosphor-glow">
+      <div id="output-container" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <!-- Initial Welcome Banner -->
+        <div class="banner-block">
+          <pre class="ascii-banner phosphor-bright"> ____  _______     ______  ____  ____  _____ 
+|  _ \| ____\ \   / / __ \/ ___||  _ \| ____|
+| | | |  _|  \ \ / / |  | \___ \| |_) |  _|  
+| |_| | |___  \ V /| |__| |___) |  __/| |___ 
+|____/|_____|  \_/  \____/|____/|_|   |_____| v2.4.0</pre>
+          <p style="color: var(--green-muted);">
+            Welcome to <strong style="color: var(--green-bright);">Alex Mercer</strong>'s interactive terminal portfolio.
+          </p>
+          <p style="font-size: 0.8125rem; color: var(--green-dim);">
+            Type <span style="color: var(--green-bright); text-decoration: underline dotted;">help</span> and press <kbd class="kbd-badge">Enter</kbd>, or tap any command pill below to explore.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tab Autocomplete Hint -->
+      <div id="tab-hint" class="tab-hint hidden"></div>
+
+      <!-- Active Command Prompt -->
+      <form id="terminal-form" class="input-form">
+        <label for="terminal-input" class="input-label">
+          <span class="prompt-desktop">visitor@portfolio:~$</span>
+          <span class="prompt-mobile">~$</span>
+        </label>
+        <input
+          type="text"
+          id="terminal-input"
+          class="terminal-input"
+          placeholder="type 'help'..."
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          autofocus
+          aria-label="Terminal command input"
+        />
+      </form>
+    </main>
+
+    <!-- Footer Quick-Action Command Pills -->
+    <footer class="terminal-footer">
+      <div class="quick-bar" id="quick-pills-bar">
+        <span class="quick-label">Quick Exec:</span>
+        <button type="button" class="quick-pill" data-cmd="help">help</button>
+        <button type="button" class="quick-pill" data-cmd="about">about</button>
+        <button type="button" class="quick-pill" data-cmd="projects">projects</button>
+        <button type="button" class="quick-pill" data-cmd="skills">skills</button>
+        <button type="button" class="quick-pill" data-cmd="contact">contact</button>
+        <button type="button" class="quick-pill" data-cmd="neofetch">neofetch</button>
+        <button type="button" class="quick-pill" data-cmd="clear">clear</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    /**
+     * Web Audio API Sound Synthesizer
+     */
+    class TerminalAudio {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playKeystroke() {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(160 + Math.random() * 45, now);
+          osc.frequency.exponentialRampToValueAtTime(45, now + 0.025);
+
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.025);
+        } catch (e) {}
+      }
+
+      playBeep(type = 'enter') {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          if (type === 'error') {
+            osc.frequency.setValueAtTime(190, now);
+            osc.frequency.setValueAtTime(140, now + 0.07);
+          } else if (type === 'tab') {
+            osc.frequency.setValueAtTime(620, now);
+          } else {
+            osc.frequency.setValueAtTime(520, now);
+            osc.frequency.exponentialRampToValueAtTime(780, now + 0.05);
+          }
+
+          gain.gain.setValueAtTime(0.045, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.09);
+        } catch (e) {}
+      }
+    }
+
+    const audioEngine = new TerminalAudio();
+
+    /**
+     * Portfolio Data
+     */
+    const PORTFOLIO_DATA = {
+      name: 'Alex Mercer',
+      role: 'Full-Stack Software Engineer',
+      location: 'San Francisco, CA (Remote Ready)',
+      email: 'alex.mercer@devshell.io',
+      github: 'https://github.com/alexmercer-dev',
+      linkedin: 'https://linkedin.com/in/alexmercer-dev',
+      projects: [
+        {
+          id: '01',
+          name: 'DevTerminal OS',
+          stack: 'HTML5, CSS3, Vanilla JS, Web Audio API',
+          description: 'Interactive bash-inspired developer portfolio with synthesized sound effects and zero-latency keyboard navigation.',
+          repo: 'https://github.com/alexmercer-dev/devterminal',
+          demo: 'https://devterminal.example.com'
+        },
+        {
+          id: '02',
+          name: 'PulseGrid Monitor',
+          stack: 'TypeScript, Node.js, WebSockets, Redis',
+          description: 'Real-time distributed microservice telemetry and latency visualizer handling 50k+ events/sec.',
+          repo: 'https://github.com/alexmercer-dev/pulsegrid',
+          demo: 'https://pulsegrid.example.com'
+        },
+        {
+          id: '03',
+          name: 'CipherVault CLI',
+          stack: 'Rust, WebAssembly, React',
+          description: 'Zero-knowledge encrypted secrets manager with both a native terminal binary and browser vault UI.',
+          repo: 'https://github.com/alexmercer-dev/ciphervault',
+          demo: 'https://ciphervault.example.com'
+        }
+      ]
+    };
+
+    const AVAILABLE_COMMANDS = [
+      'help', 'about', 'projects', 'skills', 'contact', 'whoami', 'date', 'neofetch', 'clear'
+    ];
+
+    /**
+     * DOM Elements & State
+     */
+    const terminalBody = document.getElementById('terminal-body');
+    const outputContainer = document.getElementById('output-container');
+    const terminalForm = document.getElementById('terminal-form');
+    const terminalInput = document.getElementById('terminal-input');
+    const tabHint = document.getElementById('tab-hint');
+    const crtOverlay = document.getElementById('crt-overlay');
+    const btnCrt = document.getElementById('btn-crt');
+    const btnSfx = document.getElementById('btn-sfx');
+    const sfxLabel = document.getElementById('sfx-label');
+    const iconSoundOn = document.getElementById('icon-sound-on');
+    const iconSoundOff = document.getElementById('icon-sound-off');
+
+    let cmdHistory = [];
+    let historyIndex = -1;
+    let crtEnabled = true;
+
+    function scrollToBottom() {
+      terminalBody.scrollTop = terminalBody.scrollHeight;
+    }
+
+    /**
+     * Typewriter Effect Renderer
+     */
+    function appendTypewriterBlock(text, isError = false) {
+      const wrapper = document.createElement('div');
+      wrapper.className = isError ? 'output-error' : 'output-text';
+      wrapper.title = 'Click to complete typing instantly';
+
+      const textNode = document.createTextNode('');
+      const cursor = document.createElement('span');
+      cursor.className = 'cursor-block';
+
+      wrapper.appendChild(textNode);
+      wrapper.appendChild(cursor);
+      outputContainer.appendChild(wrapper);
+
+      let index = 0;
+      let isDone = false;
+      const step = text.length > 350 ? 6 : 2;
+      const speed = isError ? 6 : 8;
+
+      function finish() {
+        if (isDone) return;
+        isDone = true;
+        textNode.nodeValue = text;
+        cursor.remove();
+        wrapper.removeAttribute('title');
+        scrollToBottom();
+      }
+
+      wrapper.addEventListener('click', finish);
+
+      function tick() {
+        if (isDone) return;
+        index = Math.min(index + step, text.length);
+        textNode.nodeValue = text.slice(0, index);
+        scrollToBottom();
+
+        if (index >= text.length) {
+          finish();
+        } else {
+          setTimeout(tick, speed);
+        }
+      }
+
+      tick();
+    }
+
+    /**
+     * Render Structured HTML Views (Projects, Contact, Neofetch)
+     */
+    function renderProjects() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'projects-wrapper';
+
+      const dirLabel = document.createElement('div');
+      dirLabel.className = 'dir-label';
+      dirLabel.textContent = `[DIRECTORY: ~/projects — ${PORTFOLIO_DATA.projects.length} repositories found]`;
+      wrapper.appendChild(dirLabel);
+
+      const grid = document.createElement('div');
+      grid.className = 'projects-grid';
+
+      PORTFOLIO_DATA.projects.forEach((proj) => {
+        const card = document.createElement('div');
+        card.className = 'project-card';
+        card.innerHTML = `
+          <div>
+            <div class="project-meta">
+              <span>#${proj.id}</span>
+              <span style="color: var(--green-bright);">★</span>
+            </div>
+            <h3 class="project-title">${proj.name}</h3>
+            <p class="project-desc">${proj.description}</p>
+          </div>
+          <div>
+            <div class="project-stack">${proj.stack}</div>
+            <div class="project-links">
+              <a href="${proj.repo}" target="_blank" rel="noopener noreferrer" class="terminal-link">
+                <span>[Source]</span>
+              </a>
+              <a href="${proj.demo}" target="_blank" rel="noopener noreferrer" class="terminal-link">
+                <span>[Live Demo]</span>
+              </a>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      wrapper.appendChild(grid);
+      outputContainer.appendChild(wrapper);
+      scrollToBottom();
+    }
+
+    function renderContact() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'contact-wrapper';
+      wrapper.innerHTML = `
+        <div style="color: var(--green-muted);">Establishing secure communication channels...</div>
+        <div class="contact-links">
+          <a href="mailto:${PORTFOLIO_DATA.email}" class="contact-pill">✉ ${PORTFOLIO_DATA.email}</a>
+          <a href="${PORTFOLIO_DATA.github}" target="_blank" rel="noopener noreferrer" class="contact-pill">⌘ GitHub</a>
+          <a href="${PORTFOLIO_DATA.linkedin}" target="_blank" rel="noopener noreferrer" class="contact-pill">in LinkedIn</a>
+        </div>
+      `;
+      outputContainer.appendChild(wrapper);
+      scrollToBottom();
+    }
+
+    function renderNeofetch() {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'neofetch-wrapper';
+      wrapper.innerHTML = `
+        <pre class="neofetch-art">   .---.
+  /     \\
+ | () () |
+  \\  ^  /
+   |||||
+   |||||</pre>
+        <div class="neofetch-info">
+          <div style="font-weight: 700; color: var(--green-bright);">visitor@portfolio</div>
+          <div style="color: var(--border-dim);">-------------------</div>
+          <div><strong style="color: var(--green-bright);">OS:</strong> DevOS 2.4.0 x86_64</div>
+          <div><strong style="color: var(--green-bright);">Host:</strong> ${PORTFOLIO_DATA.name}</div>
+          <div><strong style="color: var(--green-bright);">Kernel:</strong> HTML5 + CSS3 + Vanilla JS</div>
+          <div><strong style="color: var(--green-bright);">Shell:</strong> bash-portfolio 5.2</div>
+          <div><strong style="color: var(--green-bright);">Audio:</strong> WebAudio Synth Engine</div>
+          <div><strong style="color: var(--green-bright);">Theme:</strong> Phosphor Matrix (#00E676)</div>
+        </div>
+      `;
+      outputContainer.appendChild(wrapper);
+      scrollToBottom();
+    }
+
+    /**
+     * Execute Command Logic
+     */
+    function executeCommand(rawCmd) {
+      const trimmed = rawCmd.trim();
+      tabHint.classList.add('hidden');
+      tabHint.textContent = '';
+
+      // Echo prompt line
+      const promptLine = document.createElement('div');
+      promptLine.className = 'prompt-history';
+      promptLine.innerHTML = `<span class="prompt-user">visitor@portfolio:~$</span> <span>${escapeHTML(trimmed)}</span>`;
+      outputContainer.appendChild(promptLine);
+
+      if (!trimmed) {
+        scrollToBottom();
+        return;
+      }
+
+      // Record in arrow-key history
+      if (cmdHistory[cmdHistory.length - 1] !== trimmed) {
+        cmdHistory.push(trimmed);
+      }
+      historyIndex = -1;
+
+      const clean = trimmed.toLowerCase();
+
+      if (clean === 'clear') {
+        audioEngine.playBeep('enter');
+        outputContainer.innerHTML = '';
+        terminalInput.value = '';
+        return;
+      }
+
+      audioEngine.playBeep('enter');
+
+      switch (clean) {
+        case 'help':
+          appendTypewriterBlock([
+            'AVAILABLE COMMANDS:',
+            '  about      - Background, philosophy, and current focus',
+            '  projects   - Featured engineering builds with live links',
+            '  skills     - Technical stack categorized by domain',
+            '  contact    - Direct communication channels & socials',
+            '  neofetch   - System & developer environment specifications',
+            '  whoami     - Current session user privileges',
+            '  date       - Current local system timestamp',
+            '  clear      - Wipe terminal output buffer',
+            '',
+            'PRO TIPS:',
+            '  • Press [Tab] to autocomplete commands',
+            '  • Press [↑] / [↓] arrows to cycle command history',
+            '  • Click any output block to skip typewriter animation'
+          ].join('\n'));
+          break;
+
+        case 'about':
+          appendTypewriterBlock([
+            `>> IDENTITY: ${PORTFOLIO_DATA.name} // ${PORTFOLIO_DATA.role}`,
+            `>> LOCATION: ${PORTFOLIO_DATA.location}`,
+            '',
+            'I architect resilient, high-throughput web applications and developer tools.',
+            'My engineering philosophy centers on sub-100ms responsiveness, clean modular',
+            'systems, and interfaces that respect keyboard-first power users.',
+            '',
+            'Currently open to senior frontend / full-stack engineering roles and',
+            'selected open-source collaborations.'
+          ].join('\n'));
+          break;
+
+        case 'projects':
+          renderProjects();
+          break;
+
+        case 'skills':
+          appendTypewriterBlock([
+            '[FRONTEND ARCHITECTURE]',
+            '  ├── HTML5 / CSS3 / Modern JavaScript (ES2024+)',
+            '  ├── React.js / Next.js / TypeScript',
+            '  └── Responsive Layouts / Web Animations / Accessibility',
+            '',
+            '[BACKEND & SYSTEMS]',
+            '  ├── Node.js / Express / GraphQL / REST APIs',
+            '  ├── PostgreSQL / Redis / MongoDB',
+            '  └── WebSockets / Real-Time Event Streams',
+            '',
+            '[DEVOPS & TOOLING]',
+            '  └── Docker / Linux / Git / CI/CD / Vercel / AWS'
+          ].join('\n'));
+          break;
+
+        case 'contact':
+          renderContact();
+          break;
+
+        case 'whoami':
+          appendTypewriterBlock('visitor@portfolio (uid=1000, groups=recruiters,engineers,curious_minds)');
+          break;
+
+        case 'date':
+          appendTypewriterBlock(new Date().toString());
+          break;
+
+        case 'neofetch':
+          renderNeofetch();
+          break;
+
+        default:
+          audioEngine.playBeep('error');
+          appendTypewriterBlock(
+            `bash: ${trimmed}: command not found. Type "help" or click a quick-action pill below.`,
+            true
+          );
+          break;
+      }
+
+      terminalInput.value = '';
+      scrollToBottom();
+    }
+
+    function escapeHTML(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /**
+     * Event Listeners
+     */
+    terminalForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      executeCommand(terminalInput.value);
+    });
+
+    terminalInput.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        executeCommand('clear');
+        return;
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (cmdHistory.length === 0) return;
+        historyIndex = historyIndex === -1 ? cmdHistory.length - 1 : Math.max(0, historyIndex - 1);
+        terminalInput.value = cmdHistory[historyIndex];
+        audioEngine.playKeystroke();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex === -1) return;
+        historyIndex++;
+        if (historyIndex >= cmdHistory.length) {
+          historyIndex = -1;
+          terminalInput.value = '';
+        } else {
+          terminalInput.value = cmdHistory[historyIndex];
+        }
+        audioEngine.playKeystroke();
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        const partial = terminalInput.value.trim().toLowerCase();
+        if (!partial) return;
+
+        const matches = AVAILABLE_COMMANDS.filter((cmd) => cmd.startsWith(partial));
+        if (matches.length === 1) {
+          terminalInput.value = matches[0];
+          tabHint.classList.add('hidden');
+          audioEngine.playBeep('tab');
+        } else if (matches.length > 1) {
+          tabHint.textContent = `Suggestions: ${matches.join('   ')}`;
+          tabHint.classList.remove('hidden');
+          audioEngine.playBeep('tab');
+          scrollToBottom();
+        }
+      } else if (e.key.length === 1 || e.key === 'Backspace') {
+        tabHint.classList.add('hidden');
+        audioEngine.playKeystroke();
+      }
+    });
+
+    // Focus input when clicking anywhere in terminal body (unless selecting text)
+    terminalBody.addEventListener('click', (e) => {
+      if (e.target.closest('a') || e.target.closest('button')) return;
+      const selection = window.getSelection();
+      if (selection && selection.toString().length > 0) return;
+      terminalInput.focus();
+    });
+
+    // Quick-Action Pill Buttons
+    document.querySelectorAll('.quick-pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const cmd = btn.getAttribute('data-cmd');
+        executeCommand(cmd);
+        terminalInput.focus();
+      });
+    });
+
+    // Toggle CRT Scanlines
+    btnCrt.addEventListener('click', () => {
+      crtEnabled = !crtEnabled;
+      crtOverlay.classList.toggle('hidden', !crtEnabled);
+      btnCrt.classList.toggle('active', crtEnabled);
+      audioEngine.playKeystroke();
+    });
+
+    // Toggle Sound Effects
+    btnSfx.addEventListener('click', () => {
+      audioEngine.muted = !audioEngine.muted;
+      const active = !audioEngine.muted;
+      btnSfx.classList.toggle('active', active);
+      sfxLabel.textContent = active ? 'SFX' : 'MUTED';
+      iconSoundOn.style.display = active ? 'inline' : 'none';
+      iconSoundOff.style.display = active ? 'none' : 'inline';
+      if (active) {
+        audioEngine.playBeep('tab');
+      }
+    });
+  </script>
+</body>
+</html>
